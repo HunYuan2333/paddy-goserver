@@ -1,4 +1,4 @@
-package paddygoserver
+package main
 
 import (
 	"database/sql"
@@ -27,9 +27,6 @@ func Userlogin(c *gin.Context) {
 		c.JSON(http.StatusUnauthorized, gin.H{"error": "Interstitials"})
 	case err != nil:
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Error fetching user from the database"})
-	default:
-		c.JSON(http.StatusOK, gin.H{"status": "200"})
-
 	}
 	c.JSON(http.StatusOK, gin.H{"status": "200"})
 }

@@ -1,22 +1,43 @@
-package paddygoserver
+package main
 
 import (
 	"fmt"
 	"github.com/gin-gonic/gin"
-	_ "github.com/go-sql-driver/mysql"
 	"github.com/jmoiron/sqlx"
+)
+
+import (
+	_ "github.com/go-sql-driver/mysql"
 )
 
 var database *sqlx.DB
 
-func init() {
-	database, err := sqlx.Open("mysql", "root:13376035511@tcp(127.0.0.1:3306)/Paddy")
+func setupDatabase() (*sqlx.DB, error) {
+	db, err := sqlx.Open("mysql", "root:13376035511@tcp(127.0.0.1:3306)/Paddy")
 	if err != nil {
 		fmt.Println("open mysql failed,", err)
-		return
+		return nil, err
 	}
+	// 可以添加Ping或者其他的健康检查，确保数据库连接可用
+	if err = db.Ping(); err != nil {
+		fmt.Println("ping mysql failed,", err)
+		return nil, err
+	}
+	return db, nil
 }
-func Main() {
+
+func initRouter(db *sqlx.DB) *gin.Engine {
 	r := gin.Default()
-	r.POST("userlogin", Userlogin)
+	r.POST("/userlogin", Userlogin)
+	r.POST("/usersignup", UserSignUp)
+	return r
+}
+func main() {
+	var err error
+	database, err = setupDatabase()
+	if err != nil {
+		panic(err)
+	}
+	r := initRouter(database)
+	r.Run(":8080")
 }
