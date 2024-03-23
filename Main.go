@@ -30,6 +30,8 @@ func initRouter(db *sqlx.DB) *gin.Engine {
 	r := gin.Default()
 	r.POST("/userlogin", Userlogin)
 	r.POST("/usersignup", UserSignUp)
+	r.POST("/grow_image/", GrowImage)
+
 	return r
 }
 func main() {
