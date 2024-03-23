@@ -35,6 +35,8 @@ func initRouter(db *sqlx.DB) *gin.Engine {
 	r.GET("/ShowGrowImage/<imageId>", ShowGrowImage)
 	r.POST("/DiseaseImage", DiseaseImageUpload)
 	r.GET("/ShowDieaseImage/<imageId>", ShowDieaseImage)
+	r.POST("/PredictImage", PredictImage)
+	r.GET("/ShowPredictImage", ShowPredictImage)
 	return r
 }
 func main() {

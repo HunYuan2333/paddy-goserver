@@ -28,7 +28,7 @@ func ShowDieaseImage(c *gin.Context) {
 	}
 	result := gin.H{
 		"status": res.StatusCode,
-		"bode":   string(body),
+		"body":   string(body),
 	}
 	content_type := res.Header.Get("mimetype")
 	if content_type == "image/jpg" {
