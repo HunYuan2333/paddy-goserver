@@ -24,8 +24,8 @@ func ShowGrowImage(c *gin.Context) {
 		"status": res.StatusCode,
 		"body":   string(body),
 	}
-	contentType := res.Header.Get("Content-Type")
-	if contentType == "image/jpg" || contentType == "image/jpeg" {
+	contentType := res.Header.Get("mimetype")
+	if contentType == "image/jpg" {
 		c.Data(res.StatusCode, contentType, body)
 	} else {
 		c.JSON(res.StatusCode, result)

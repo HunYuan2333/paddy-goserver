@@ -8,7 +8,7 @@ import (
 	"net/http"
 )
 
-func GrowImage(c *gin.Context) {
+func GrowImageUpload(c *gin.Context) {
 	if c.Request.Method == http.MethodPost {
 		file, err := c.FormFile("file")
 		if err == nil {

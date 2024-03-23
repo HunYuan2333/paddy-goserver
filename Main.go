@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"github.com/gin-gonic/gin"
 	"github.com/jmoiron/sqlx"
+	"log"
 )
 
 import (
@@ -30,16 +31,23 @@ func initRouter(db *sqlx.DB) *gin.Engine {
 	r := gin.Default()
 	r.POST("/userlogin", Userlogin)
 	r.POST("/usersignup", UserSignUp)
-	r.POST("/grow_image/", GrowImage)
-
+	r.POST("/grow_image/", GrowImageUpload)
+	r.GET("/ShowGrowImage/<imageId>", ShowGrowImage)
+	r.POST("/DiseaseImage", DiseaseImageUpload)
+	r.GET("/ShowDieaseImage/<imageId>", ShowDieaseImage)
 	return r
 }
 func main() {
 	var err error
 	database, err = setupDatabase()
 	if err != nil {
+		log.Print(err)
 		panic(err)
 	}
 	r := initRouter(database)
-	r.Run(":8080")
+	err = r.Run(":8080")
+	if err != nil {
+		log.Print(err)
+		return
+	}
 }
