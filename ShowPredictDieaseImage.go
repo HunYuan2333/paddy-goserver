@@ -7,9 +7,9 @@ import (
 	"net/http"
 )
 
-func ShowPredictImage(c *gin.Context) {
+func ShowPredictDiseaseImage(c *gin.Context) {
 	Imgid := c.Param("imgid")
-	pythonurl := "http://127.0.0.1:5000/show_predict_grow_image/" + Imgid
+	pythonurl := "http://127.0.0.1:5000/show_predict_disease_image/" + Imgid
 	res, err := http.Get(pythonurl)
 	if err != nil {
 		c.JSON(http.StatusOK, gin.H{

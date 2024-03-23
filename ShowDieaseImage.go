@@ -7,14 +7,14 @@ import (
 	"net/http"
 )
 
-func ShowDieaseImage(c *gin.Context) {
+func ShowDiseaseImage(c *gin.Context) {
 	imgid := c.Param("imageId")
 	pythonurl := "http://127.0.0.1:5000/show_disease_image/" + imgid
 	res, err := http.Get(pythonurl)
 	if err != nil {
 		c.JSON(http.StatusOK, gin.H{
 			"code": 500,
-			"msg":  "连接ython 服务器出错",
+			"msg":  "连接python 服务器出错",
 		})
 		log.Print(err)
 		return
