@@ -9,33 +9,46 @@ import (
 	"net/http"
 )
 
+// Login 结构体用于定义用户登录信息
 type Login struct {
-	Username string `json:"username"`
-	Password string `json:"password"`
+	Username string `json:"username"` // 用户名
+	Password string `json:"password"` // 密码
 }
 
+// Userlogin 处理用户登录请求
+// c *gin.Context: Gin框架的上下文对象，用于处理HTTP请求和响应
 func Userlogin(c *gin.Context) {
-	var json Login
+	var json Login // 用于存储从请求中解析的JSON登录信息
+
+	// 尝试从请求体中解析JSON格式的登录信息
 	if err := c.ShouldBindJSON(&json); err != nil {
+		// 如果解析失败，返回状态码400（Bad Request）和错误信息
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
+
+	// 准备数据库查询语句
 	prepstmt := "SELECT COUNT(*) FROM User WHERE Username =? AND Password = ?"
 	stmt, preperr := database.Prepare(prepstmt)
 	if preperr != nil {
+		// 如果准备语句失败，返回状态码500（Internal Server Error）和错误信息
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Error preparing statement"})
 		return
 	}
-	var count int64
-	// 使用 _ 作为占位符，因为我们只关心查询是否成功
+	var count int64 // 用于存储查询结果的计数
+
+	// 执行查询，检查用户名和密码是否匹配
 	err := stmt.QueryRow(json.Username, json.Password).Scan(&count)
 	switch {
 	case errors.Is(err, sql.ErrNoRows):
+		// 如果查询无结果，返回状态码401（Unauthorized）和错误信息
 		c.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid credentials"})
 	case err != nil:
+		// 如果查询过程中发生其他错误，记录错误日志并返回状态码500和错误信息
 		log.Printf("Unexpected error while fetching user: %v", err)
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Error fetching user from the database"})
 	default:
+		// 根据查询结果计数判断登录是否成功，并返回相应的状态码和信息
 		if count > 0 {
 			c.JSON(http.StatusOK, gin.H{"status": "200"})
 		} else {
