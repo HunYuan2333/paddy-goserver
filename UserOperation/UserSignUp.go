@@ -1,4 +1,4 @@
-package main
+package UserOperation
 
 import (
 	"fmt"
@@ -11,7 +11,7 @@ type SignUpData struct {
 	Password string `json:"password"`
 }
 
-func UserSignUp(c *gin.Context) {
+func UserSignup(c *gin.Context) {
 	var json SignUpData
 	if err := c.ShouldBindJSON(&json); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})

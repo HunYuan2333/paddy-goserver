@@ -1,4 +1,4 @@
-package main
+package PredictImage
 
 import (
 	"github.com/gin-gonic/gin"

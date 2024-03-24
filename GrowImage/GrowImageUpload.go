@@ -1,4 +1,4 @@
-package main
+package GrowImage
 
 import (
 	"github.com/gin-gonic/gin"

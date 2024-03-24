@@ -1,18 +1,29 @@
-package main
+package UserOperation
 
 import (
 	"database/sql"
 	"errors"
 	"github.com/gin-gonic/gin"
 	_ "github.com/go-sql-driver/mysql"
+	"github.com/jmoiron/sqlx"
 	"log"
 	"net/http"
+	"paddy-goserver/DataBaseConnection"
 )
 
 // Login 结构体用于定义用户登录信息
 type Login struct {
 	Username string `json:"username"` // 用户名
 	Password string `json:"password"` // 密码
+}
+
+var database *sqlx.DB
+
+func init() {
+	if err := DataBaseConnection.SetupDatabase(); err != nil {
+		panic(err)
+	}
+	database = DataBaseConnection.GetDatabase()
 }
 
 // Userlogin 处理用户登录请求
