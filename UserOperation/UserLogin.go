@@ -47,7 +47,6 @@ func Userlogin(c *gin.Context) {
 		return
 	}
 	var count int64 // 用于存储查询结果的计数
-
 	// 执行查询，检查用户名和密码是否匹配
 	err := stmt.QueryRow(json.Username, json.Password).Scan(&count)
 	switch {
