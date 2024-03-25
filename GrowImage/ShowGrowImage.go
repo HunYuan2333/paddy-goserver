@@ -3,31 +3,29 @@ package GrowImage
 import (
 	"github.com/gin-gonic/gin"
 	"io/ioutil"
+	"log"
 	"net/http"
+	"os"
+	"path/filepath"
 )
 
 func ShowGrowImage(c *gin.Context) {
-	imageid := c.Param("imageId")
-	pythonApIUrl := "http://127.0.0.1:5000/showgrowimage/" + imageid
-	res, err := http.Get(pythonApIUrl)
+	imgid := c.Param("imageId") + ".jpg"
+	Imgdir := os.Getenv("PADDY_SERVER_FILE_PATH")
+	ImgPath := filepath.Join(Imgdir, "/GrowImage")
+	if err := os.MkdirAll(ImgPath, 0755); err != nil {
+		// 处理错误
+		log.Fatal(err)
+	}
+	ImgPath = filepath.Join(ImgPath, "/", imgid)
+	body, err := ioutil.ReadFile(ImgPath)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to connect to Python backend"})
+		c.JSON(404, gin.H{
+			"status": 404,
+			"body":   "图片不存在",
+		})
 		return
 	}
-	defer res.Body.Close()
-	body, err := ioutil.ReadAll(res.Body)
-	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to read response from Python backend"})
-		return
-	}
-	result := gin.H{
-		"status": res.StatusCode,
-		"body":   string(body),
-	}
-	contentType := res.Header.Get("mimetype")
-	if contentType == "image/jpg" {
-		c.Data(res.StatusCode, contentType, body)
-	} else {
-		c.JSON(res.StatusCode, result)
-	}
+	content_type := "image/jpg"
+	c.Data(http.StatusOK, content_type, body)
 }

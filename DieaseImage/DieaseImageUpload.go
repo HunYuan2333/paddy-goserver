@@ -2,40 +2,29 @@ package DieaseImage
 
 import (
 	"github.com/gin-gonic/gin"
-	"github.com/goccy/go-json"
-	"io/ioutil"
-	"log"
 	"net/http"
+	"os"
+	"path/filepath"
 )
 
 func DiseaseImageUpload(c *gin.Context) {
 	file, err := c.FormFile("file")
-	if err == nil {
-		if file != nil {
-			imgbyte, err := file.Open()
-			if err != nil {
-				c.JSON(http.StatusInternalServerError, gin.H{"message": "读取上传文件失败"})
-				log.Print(err)
-				return
-			}
-			defer imgbyte.Close()
-			res, err := http.Post("127.0.0.1:8080/upload_disease_image", "multipart/form-data", imgbyte)
-			if err != nil {
-				c.JSON(http.StatusInternalServerError, gin.H{"message": "转发图片到Python服务失败"})
-				log.Print(err)
-				return
-			}
-			defer res.Body.Close()
-			body, _ := ioutil.ReadAll(res.Body)
-			responseJSON := make(map[string]interface{})
-			json.Unmarshal(body, &responseJSON)
-			c.JSON(http.StatusOK, responseJSON)
-		} else {
-			c.JSON(http.StatusBadRequest, gin.H{"message": "未接收到文件"})
-			return
-		}
-	} else {
-		c.JSON(http.StatusBadRequest, gin.H{"message": "获取上传文件失败"})
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Error retrieving file from request"})
 		return
 	}
+	filedir := os.Getenv("PADDY_SERVER_FILE_PATH")
+	filedir = filepath.Join(filedir, "/DiseaseImage")
+	err = os.MkdirAll(filedir, 0755)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Error creating directory"})
+		return
+	}
+	myfilepath := filepath.Join(filedir, "/", file.Filename)
+	err = c.SaveUploadedFile(file, myfilepath)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Error saving file"})
+		return
+	}
+	c.JSON(http.StatusOK, gin.H{"data": file.Filename, "message": "上传成功"})
 }

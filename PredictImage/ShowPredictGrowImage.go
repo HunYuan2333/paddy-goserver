@@ -5,6 +5,7 @@ import (
 	"io/ioutil"
 	"log"
 	"net/http"
+	"os"
 )
 
 func ShowPredictGrowImage(c *gin.Context) {
@@ -19,7 +20,17 @@ func ShowPredictGrowImage(c *gin.Context) {
 		log.Print(err)
 		return
 	}
+	filedir := os.Getenv("PADDY_SERVER_FILE_PATH")
+	filedir = filedir + "/" + "PredictGrowImage"
+	err = os.MkdirAll(filedir, 0755)
+	if err != nil {
+		log.Print(err)
+	}
+	myfilepath := filedir + "/" + Imgid + ".jpg"
 	body, err := ioutil.ReadAll(res.Body)
+	f, err := os.Create(myfilepath)
+	defer f.Close()
+	_, err = f.Write(body)
 	result := gin.H{
 		"status": res.StatusCode,
 		"body":   string(body),

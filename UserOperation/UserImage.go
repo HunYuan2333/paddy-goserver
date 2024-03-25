@@ -8,6 +8,8 @@ import (
 	"io/ioutil"
 	"log"
 	"net/http"
+	"os"
+	"path/filepath"
 )
 
 func UserImage(c *gin.Context) {
@@ -33,7 +35,8 @@ func UserImage(c *gin.Context) {
 		// 根据查询结果计数判断登录是否成功，并返回相应的状态码和信息
 		if count > 0 {
 			Imgurl := fmt.Sprintf("%s.png", Imgurl)
-			FileImgUrl := fmt.Sprintf("UserImage/%s", Imgurl)
+			ImgDir := os.Getenv("PADDY_SERVER_FILE_PATH")
+			FileImgUrl := filepath.Join(ImgDir, fmt.Sprintf("UserImage/%s", Imgurl))
 			mgData, err := ioutil.ReadFile(FileImgUrl)
 			if err != nil {
 				c.String(http.StatusInternalServerError, "Error reading image file: %v", err)

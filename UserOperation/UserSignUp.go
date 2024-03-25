@@ -29,5 +29,5 @@ func UserSignup(c *gin.Context) {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to register customer"})
 		return
 	}
-	c.JSON(http.StatusOK, gin.H{"success": "Successfully registered customer"})
+	c.JSON(http.StatusOK, gin.H{"message": "Successfully registered customer"})
 }

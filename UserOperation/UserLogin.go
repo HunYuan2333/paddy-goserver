@@ -39,7 +39,7 @@ func Userlogin(c *gin.Context) {
 	}
 
 	// 准备数据库查询语句
-	prepstmt := "SELECT COUNT(*) FROM User WHERE Username =? AND Password = ?"
+	prepstmt := "SELECT COUNT(*) Userid imgurlFROM User WHERE Username =? AND Password = ?"
 	stmt, preperr := database.Prepare(prepstmt)
 	if preperr != nil {
 		// 如果准备语句失败，返回状态码500（Internal Server Error）和错误信息
@@ -47,8 +47,10 @@ func Userlogin(c *gin.Context) {
 		return
 	}
 	var count int64 // 用于存储查询结果的计数
+	var Userid int64
+	var imgurl string
 	// 执行查询，检查用户名和密码是否匹配
-	err := stmt.QueryRow(json.Username, json.Password).Scan(&count)
+	err := stmt.QueryRow(json.Username, json.Password).Scan(&count, &Userid, &imgurl)
 	switch {
 	case errors.Is(err, sql.ErrNoRows):
 		// 如果查询无结果，返回状态码401（Unauthorized）和错误信息
@@ -60,7 +62,10 @@ func Userlogin(c *gin.Context) {
 	default:
 		// 根据查询结果计数判断登录是否成功，并返回相应的状态码和信息
 		if count > 0 {
-			c.JSON(http.StatusOK, gin.H{"status": "200"})
+			c.JSON(http.StatusOK, gin.H{"code": "200",
+				"id":       Userid,
+				"imgurl":   imgurl,
+				"username": Login{Username: json.Username}})
 		} else {
 			c.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid credentials"})
 		}

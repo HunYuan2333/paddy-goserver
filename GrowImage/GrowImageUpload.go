@@ -2,52 +2,29 @@ package GrowImage
 
 import (
 	"github.com/gin-gonic/gin"
-	"github.com/goccy/go-json"
-	"io/ioutil"
-	"log"
 	"net/http"
+	"os"
+	"path/filepath"
 )
 
 func GrowImageUpload(c *gin.Context) {
-	if c.Request.Method == http.MethodPost {
-		file, err := c.FormFile("file")
-		if err == nil {
-			if file != nil {
-				// 读取文件内容
-				imgBytes, err := file.Open()
-				if err != nil {
-					c.JSON(http.StatusInternalServerError, gin.H{"message": "读取上传文件失败"})
-					log.Print(err)
-					return
-				}
-				defer imgBytes.Close()
-				// 将图片内容发送到Python Flask应用
-				resp, err := http.Post(
-					"http://localhost:5000/upload_grow_image",
-					file.Header.Get("Content-Type"),
-					imgBytes,
-				)
-				if err != nil {
-					c.JSON(http.StatusInternalServerError, gin.H{"message": "转发图片到Python服务失败"})
-					log.Print(err)
-					return
-				}
-				defer resp.Body.Close()
-
-				body, _ := ioutil.ReadAll(resp.Body)
-				responseJSON := make(map[string]interface{})
-				json.Unmarshal(body, &responseJSON)
-				c.JSON(http.StatusOK, responseJSON)
-				return
-			} else {
-				c.JSON(http.StatusBadRequest, gin.H{"message": "未接收到文件"})
-				return
-			}
-		} else {
-			c.JSON(http.StatusBadRequest, gin.H{"message": "获取上传文件失败"})
-			return
-		}
+	file, err := c.FormFile("file")
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Error retrieving file from request"})
+		return
 	}
-
-	c.JSON(http.StatusMethodNotAllowed, gin.H{"message": "仅支持POST方法"})
+	filedir := os.Getenv("PADDY_SERVER_FILE_PATH")
+	filedir = filepath.Join(filedir, "/GrowImage")
+	err = os.MkdirAll(filedir, 0755)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Error creating directory"})
+		return
+	}
+	myfilepath := filepath.Join(filedir, "/", file.Filename)
+	err = c.SaveUploadedFile(file, myfilepath)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Error saving file"})
+		return
+	}
+	c.JSON(http.StatusOK, gin.H{"data": file.Filename, "message": "上传成功"})
 }
