@@ -3,6 +3,7 @@ package UserOperation
 import (
 	"fmt"
 	"github.com/gin-gonic/gin"
+	"log"
 	"net/http"
 )
 
@@ -17,17 +18,20 @@ func UserSignup(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
+	fmt.Print(SignUpData{})
 	prepstmt := "INSERT INTO User(Username,Password,imgurl) VALUES (?,?,?)"
 	stmt, errpre := database.Prepare(prepstmt)
 	if errpre != nil {
 		fmt.Print("error in datacommand prepare")
+		log.Print(errpre)
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to register customer"})
 		return
 	}
+	//TODO:usermname查重
 	_, err := stmt.Exec(json.Username, json.Password, nil)
 	if err != nil { // 处理错误...
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to register customer"})
 		return
 	}
-	c.JSON(http.StatusOK, gin.H{"message": "Successfully registered customer"})
+	c.JSON(200, gin.H{"message": "Test"})
 }
