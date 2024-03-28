@@ -1,9 +1,10 @@
 package main
 
 import (
-	"github.com/gin-contrib/cors"
+	"github.com/gin-gonic/gin"
 	_ "github.com/go-sql-driver/mysql"
 	"log"
+	"net/http"
 	"paddy-goserver/Router"
 )
 
@@ -14,14 +15,14 @@ func main() {
 		panic(err)
 	}
 	r := Router.InitRouter()
-	// 创建CORS配置对象
-	corsConfig := cors.DefaultConfig()
-	corsConfig.AllowOrigins = []string{"http://localhost:5173"}                 // 允许特定源
-	corsConfig.AllowMethods = []string{"GET", "POST", "PUT", "PATCH", "DELETE"} // 允许的方法
-	corsConfig.AllowHeaders = []string{"Content-Type", "Authorization"}         // 允许的头部
-	corsConfig.AllowCredentials = true                                          // 允许带凭证的请求（如 cookies）
+	// 设置跨域中间件
 
-	r.Use(cors.New(corsConfig))
+	// 示例路由
+	r.GET("/hello", func(c *gin.Context) {
+		c.String(http.StatusOK, "Hello, World!")
+	})
+
+	// 启动服务器
 	err = r.Run(":5000")
 	if err != nil {
 		log.Print(err)

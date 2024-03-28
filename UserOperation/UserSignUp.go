@@ -28,10 +28,13 @@ func UserSignup(c *gin.Context) {
 		return
 	}
 	//TODO:usermname查重
-	_, err := stmt.Exec(json.Username, json.Password, nil)
+	_, err := stmt.Exec(json.Username, json.Password, "D:\\work_space\\go\\paddy-goserver\\Image\\no.png")
 	if err != nil { // 处理错误...
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to register customer"})
 		return
 	}
-	c.JSON(200, gin.H{"message": "Test"})
+	c.JSON(200, gin.H{
+		"status":  "success",
+		"message": "注册成功",
+	})
 }

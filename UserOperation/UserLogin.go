@@ -39,11 +39,12 @@ func Userlogin(c *gin.Context) {
 	}
 
 	// 准备数据库查询语句
-	prepstmt := "SELECT COUNT(*) Userid imgurlFROM User WHERE Username =? AND Password = ?"
+	prepstmt := "SELECT COUNT(*),Userid,imgurl FROM User WHERE Username =? AND Password = ? GROUP BY Userid, imgurl"
 	stmt, preperr := database.Prepare(prepstmt)
 	if preperr != nil {
 		// 如果准备语句失败，返回状态码500（Internal Server Error）和错误信息
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Error preparing statement"})
+		log.Print(preperr)
 		return
 	}
 	var count int64 // 用于存储查询结果的计数
