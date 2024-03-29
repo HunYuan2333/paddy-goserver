@@ -23,10 +23,12 @@ func UserImageUpload(c *gin.Context) {
 	file := files[0]
 	userid := form.Value["userid"][0]
 	filedir := os.Getenv("PADDY_SERVER_FILE_PATH")
+	log.Print(filedir)
 	filedir = filedir + "/" + "UserImage"
 	err = os.MkdirAll(filedir, 0755)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		log.Print(err)
 		return
 	}
 	imgurl := filedir + "/" + userid + ".jpg"

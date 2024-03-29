@@ -6,6 +6,7 @@ import (
 	"paddy-goserver/GrowImage"
 	"paddy-goserver/PredictImage"
 	_ "paddy-goserver/PredictImage"
+	"paddy-goserver/UserOperation"
 )
 
 func ShowImg(c *gin.Context) {
@@ -19,7 +20,8 @@ func ShowImg(c *gin.Context) {
 		GrowImage.ShowGrowImage(c)
 	case ImgType == "DiseaseImage":
 		DieaseImage.ShowDiseaseImage(c)
-		//case ImgType==
+	case ImgType == "UserImage":
+		UserOperation.UserImage(c)
 
 	}
 }

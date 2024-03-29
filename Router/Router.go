@@ -7,6 +7,7 @@ import (
 	"paddy-goserver/DieaseImage"
 	"paddy-goserver/GrowImage"
 	"paddy-goserver/PredictImage"
+	"paddy-goserver/ShowImg"
 	"paddy-goserver/UserOperation"
 	"time"
 )
@@ -32,8 +33,9 @@ func InitRouter() *gin.Engine {
 	r.POST("/userlogin", UserOperation.Userlogin)
 	r.POST("/usersignup", UserOperation.UserSignup)
 	r.POST("/grow_image/", GrowImage.GrowImageUpload)
-	r.GET("/ShowImg/<ImgType>/<imageId>", GrowImage.ShowGrowImage)
+	r.GET("/ShowImg/:ImgType/:imageId", ShowImg.ShowImg)
 	r.POST("/DiseaseImage", DieaseImage.DiseaseImageUpload)
 	r.POST("/PredictImage", PredictImage.PredictImage)
+
 	return r
 }
