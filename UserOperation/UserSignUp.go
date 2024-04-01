@@ -1,6 +1,7 @@
 package UserOperation
 
 import (
+	"database/sql"
 	"fmt"
 	"github.com/gin-gonic/gin"
 	"log"
@@ -18,7 +19,19 @@ func UserSignup(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
-	fmt.Print(SignUpData{})
+	prepStmtCheck := "SELECT COUNT(*) FROM User WHERE Username = ?"
+	row := database.QueryRow(prepStmtCheck, json.Username)
+	var count int
+	if err := row.Scan(&count); err != nil && err != sql.ErrNoRows {
+		log.Printf("Error checking for duplicate username: %v", err)
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to process request"})
+		return
+	}
+	if count > 0 {
+		// 用户名已存在，返回错误信息
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Username already exists"})
+		return
+	}
 	prepstmt := "INSERT INTO User(Username,Password,imgurl) VALUES (?,?,?)"
 	stmt, errpre := database.Prepare(prepstmt)
 	if errpre != nil {
