@@ -57,7 +57,7 @@ func UserSignup(c *gin.Context) {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to register customer"})
 		return
 	}
-	_, err := stmt.Exec(json.Username, HashedPassword, "D:\\work_space\\go\\paddy-goserver\\Image\\no.png")
+	_, err := stmt.Exec(json.Username, HashedPassword, "no.png")
 	if err != nil { // 处理错误...
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to register customer"})
 		return
