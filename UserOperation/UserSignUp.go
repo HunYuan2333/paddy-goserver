@@ -2,8 +2,11 @@ package UserOperation
 
 import (
 	"database/sql"
+	"errors"
 	"fmt"
 	"github.com/gin-gonic/gin"
+	"golang.org/x/crypto/bcrypt"
+	_ "golang.org/x/crypto/bcrypt"
 	"log"
 	"net/http"
 )
@@ -13,8 +16,16 @@ type SignUpData struct {
 	Password string `json:"password"`
 }
 
+func HashPassword(password string) (string, error) {
+	hashedpassword, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
+	if err != nil {
+		log.Fatal(err)
+	}
+	return string(hashedpassword), nil
+}
 func UserSignup(c *gin.Context) {
 	var json SignUpData
+
 	if err := c.ShouldBindJSON(&json); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
@@ -22,7 +33,7 @@ func UserSignup(c *gin.Context) {
 	prepStmtCheck := "SELECT COUNT(*) FROM User WHERE Username = ?"
 	row := database.QueryRow(prepStmtCheck, json.Username)
 	var count int
-	if err := row.Scan(&count); err != nil && err != sql.ErrNoRows {
+	if err := row.Scan(&count); err != nil && !errors.Is(err, sql.ErrNoRows) {
 		log.Printf("Error checking for duplicate username: %v", err)
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to process request"})
 		return
@@ -30,6 +41,12 @@ func UserSignup(c *gin.Context) {
 	if count > 0 {
 		// 用户名已存在，返回错误信息
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Username already exists"})
+		return
+	}
+	HashedPassword, hasherr := HashPassword(json.Password)
+	if hasherr != nil {
+		log.Printf("Error hashing password: %v", hasherr)
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to process request"})
 		return
 	}
 	prepstmt := "INSERT INTO User(Username,Password,imgurl) VALUES (?,?,?)"
@@ -40,8 +57,7 @@ func UserSignup(c *gin.Context) {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to register customer"})
 		return
 	}
-	//TODO:usermname查重
-	_, err := stmt.Exec(json.Username, json.Password, "D:\\work_space\\go\\paddy-goserver\\Image\\no.png")
+	_, err := stmt.Exec(json.Username, HashedPassword, "D:\\work_space\\go\\paddy-goserver\\Image\\no.png")
 	if err != nil { // 处理错误...
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to register customer"})
 		return

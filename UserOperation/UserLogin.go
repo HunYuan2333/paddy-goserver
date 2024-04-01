@@ -6,6 +6,7 @@ import (
 	"github.com/gin-gonic/gin"
 	_ "github.com/go-sql-driver/mysql"
 	"github.com/jmoiron/sqlx"
+	"golang.org/x/crypto/bcrypt"
 	"log"
 	"net/http"
 	"paddy-goserver/DataBaseConnection"
@@ -39,19 +40,19 @@ func Userlogin(c *gin.Context) {
 	}
 
 	// 准备数据库查询语句
-	prepstmt := "SELECT COUNT(*),Userid,imgurl FROM User WHERE Username =? AND Password = ? GROUP BY Userid, imgurl"
+	prepstmt := "SELECT Userid,imgurl,Password FROM User WHERE Username =? GROUP BY Userid, imgurl,Password"
 	stmt, preperr := database.Prepare(prepstmt)
 	if preperr != nil {
 		// 如果准备语句失败，返回状态码500（Internal Server Error）和错误信息
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Error preparing statement"})
 		log.Print(preperr)
 		return
-	}
-	var count int64 // 用于存储查询结果的计数
+	} // 用于存储查询结果的计数
 	var Userid int64
 	var imgurl string
+	var hashedPassword []byte
 	// 执行查询，检查用户名和密码是否匹配
-	err := stmt.QueryRow(json.Username, json.Password).Scan(&count, &Userid, &imgurl)
+	err := stmt.QueryRow(json.Username).Scan(&Userid, &imgurl, &hashedPassword)
 	switch {
 	case errors.Is(err, sql.ErrNoRows):
 		// 如果查询无结果，返回状态码401（Unauthorized）和错误信息
@@ -61,12 +62,13 @@ func Userlogin(c *gin.Context) {
 		log.Printf("Unexpected error while fetching user: %v", err)
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Error fetching user from the database"})
 	default:
+		hasherr := bcrypt.CompareHashAndPassword(hashedPassword, []byte(json.Password))
 		// 根据查询结果计数判断登录是否成功，并返回相应的状态码和信息
-		if count > 0 {
+		if hasherr == nil {
 			c.JSON(http.StatusOK, gin.H{"code": "200",
 				"id":       Userid,
 				"imgurl":   imgurl,
-				"username": Login{Username: json.Username}})
+				"username": json.Username})
 		} else {
 			c.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid credentials"})
 		}
