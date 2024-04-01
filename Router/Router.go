@@ -6,6 +6,8 @@ import (
 	"paddy-goserver/DataBaseConnection"
 	"paddy-goserver/DieaseImage"
 	"paddy-goserver/GrowImage"
+	"paddy-goserver/MeteorologicalData"
+	_ "paddy-goserver/MeteorologicalData"
 	"paddy-goserver/PredictImage"
 	"paddy-goserver/ShowImg"
 	"paddy-goserver/UserOperation"
@@ -36,6 +38,7 @@ func InitRouter() *gin.Engine {
 	r.GET("/ShowImg/:ImgType/:imageId", ShowImg.ShowImg)
 	r.POST("/DiseaseImage", DieaseImage.DiseaseImageUpload)
 	r.POST("/PredictImage", PredictImage.PredictImage)
+	r.POST("/GetDate/<Type>", MeteorologicalData.DataCheck)
 
 	return r
 }

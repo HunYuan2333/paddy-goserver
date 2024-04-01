@@ -54,7 +54,8 @@ func UserImageUpload(c *gin.Context) {
 		log.Fatal(err)
 	}
 	defer stmt.Close()
-	_, err = stmt.Exec(imgurl, userid)
+	databaseimgurl := userid + ".jpg"
+	_, err = stmt.Exec(databaseimgurl, userid)
 	if err != nil {
 		log.Fatal(err)
 	}

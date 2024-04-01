@@ -10,7 +10,7 @@ import (
 
 func UserImage(c *gin.Context) {
 	Imgurl := c.Param("imageId")
-	filename := os.Getenv("PADDY_SERVER_FILE_PATH") + "/" + Imgurl
+	filename := os.Getenv("PADDY_SERVER_FILE_PATH") + "/" + "UserImage" + "/" + Imgurl
 	imgData, err := ioutil.ReadFile(filename)
 	if err != nil {
 		c.AbortWithStatus(http.StatusNotFound)
