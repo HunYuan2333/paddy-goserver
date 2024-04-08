@@ -38,7 +38,6 @@ func InitRouter() *gin.Engine {
 	r.GET("/ShowImg/:ImgType/:imageId", ShowImg.ShowImg)
 	r.POST("/DiseaseImage", DieaseImage.DiseaseImageUpload)
 	r.POST("/PredictImage", PredictImage.PredictImage)
-	r.POST("/GetDate/<Type>", MeteorologicalData.DataCheck)
-
+	r.POST("/GetData/:Type", MeteorologicalData.DataCheck)
 	return r
 }
