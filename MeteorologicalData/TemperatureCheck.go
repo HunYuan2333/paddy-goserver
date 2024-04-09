@@ -64,27 +64,40 @@ func TemperatureCheck(c *gin.Context) {
 func YearTemperatureCheck(c *gin.Context, json TemperatureCheckData) {
 	start := json.Start.Time
 	end := start.AddDate(1, 0, 0)
-	query, err := database.Query("SELECT DATE_FORMAT(time, '%Y-%m') AS month, AVG(MonthAverageTemperature) AS avg_monthtem FROM SHOUTemperature WHERE time BETWEEN ? AND ? GROUP BY month ORDER BY month LIMIT 12; ", start, end)
+
+	// 构建 SQL 查询语句
+	queryStr := `
+		SELECT DATE_FORMAT(time_month, '%Y-%m') AS month, AVG(temperature) AS avg_monthtem
+		FROM MonthAverageTemperature
+		WHERE time_month BETWEEN ? AND ?
+		GROUP BY month
+		ORDER BY month;
+	`
+
+	// 执行查询
+	rows, err := database.Query(queryStr, start, end)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
-	defer query.Close()
+	defer rows.Close()
+
 	temp := make([]float64, 12)
-	for query.Next() {
+	for rows.Next() {
 		var month string
 		var avg_monthtem float64
-		if err := query.Scan(&month, &avg_monthtem); err != nil {
+		if err := rows.Scan(&month, &avg_monthtem); err != nil {
 			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 			return
 		}
 		mon, _ := time.Parse("2006-01", month)
 		temp[mon.Month()-1] = avg_monthtem
-		if err := query.Err(); err != nil {
+		if err := rows.Err(); err != nil {
 			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 			return
 		}
 	}
+
 	c.JSON(http.StatusOK, gin.H{
 		"yData": temp,
 	})
