@@ -59,6 +59,9 @@ func TemperatureCheck(c *gin.Context) {
 	if json.Type == "year" {
 		YearTemperatureCheck(c, json)
 		return
+	} else if json.Type == "month" {
+		MonthTemperatureCheck(c, json)
+		return
 	}
 }
 func YearTemperatureCheck(c *gin.Context, json TemperatureCheckData) {
@@ -100,5 +103,55 @@ func YearTemperatureCheck(c *gin.Context, json TemperatureCheckData) {
 
 	c.JSON(http.StatusOK, gin.H{
 		"yData": temp,
+	})
+}
+func MonthTemperatureCheck(c *gin.Context, json TemperatureCheckData) {
+	start := json.Start.Time
+	end := start.AddDate(0, 1, 0)
+
+	// 使用临时解决方案，将 time_day 显式转换为字符串
+	queryStr := `
+		SELECT DATE_FORMAT(time_day, '%Y-%m-%d') AS time_day_str, temperature
+		FROM Paddy.DayAverageTemperature
+		WHERE time_day BETWEEN ? AND ?
+		  AND DAY(time_day) % 5 = 0
+		ORDER BY time_day
+	`
+
+	// 执行查询
+	rows, err := database.Query(queryStr, start, end)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+	defer rows.Close()
+
+	temps := []float64{}
+	for rows.Next() {
+		var timeStr string
+		var temp float64
+
+		if err := rows.Scan(&timeStr, &temp); err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+			return
+		}
+
+		_, err := time.Parse("2006-01-02", timeStr)
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+			return
+		}
+
+		temps = append(temps, temp)
+	}
+
+	if err := rows.Err(); err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	// 返回 {"mData": [temperatures...]}
+	c.JSON(http.StatusOK, gin.H{
+		"mData": temps,
 	})
 }
