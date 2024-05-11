@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"github.com/gin-gonic/gin"
 	"github.com/jmoiron/sqlx"
+	"log"
 	"net/http"
 	"paddy-goserver/DataBaseConnection"
 	"time"
@@ -56,14 +57,60 @@ func TemperatureCheck(c *gin.Context) {
 		return
 	}
 
-	if json.Type == "year" {
+	switch json.Type {
+	case "year":
 		YearTemperatureCheck(c, json)
-		return
-	} else if json.Type == "month" {
+	case "month":
 		MonthTemperatureCheck(c, json)
-		return
+	case "day":
+		DayTemperatureCheck(c, json)
 	}
 }
+
+// DayTemperatureCheck 函数按小时遍历24小时的温度数据
+func DayTemperatureCheck(c *gin.Context, json TemperatureCheckData) {
+	start := json.Start.Time
+	end := start.Add(24 * time.Hour) // 遍历24小时后的时刻
+
+	// 构建 SQL 查询语句
+	queryStr := `
+		SELECT HOUR(time) AS hour, AVG(temperature) AS avg_hourlytem
+		FROM Temperature
+		WHERE time BETWEEN ? AND ?
+		GROUP BY hour
+		ORDER BY hour;
+	`
+	// 假设有一个全局的database对象用于执行SQL查询
+	rows, err := database.Query(queryStr, start, end)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		log.Println("Error executing query:", err)
+		return
+	}
+	defer rows.Close()
+
+	// 初始化24小时的温度数组
+	temp := make([]float64, 24)
+
+	for rows.Next() {
+		var hour int
+		var avg_hourlytem float64
+		if err := rows.Scan(&hour, &avg_hourlytem); err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+			return
+		}
+		temp[hour] = avg_hourlytem
+		if err := rows.Err(); err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+			return
+		}
+	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"yData": temp, // 使用 "hData" 以区别于年数据，表示小时数据
+	})
+}
+
 func YearTemperatureCheck(c *gin.Context, json TemperatureCheckData) {
 	start := json.Start.Time
 	end := start.AddDate(1, 0, 0)
@@ -114,9 +161,9 @@ func MonthTemperatureCheck(c *gin.Context, json TemperatureCheckData) {
 		SELECT DATE_FORMAT(time_day, '%Y-%m-%d') AS time_day_str, temperature
 		FROM Paddy.DayAverageTemperature
 		WHERE time_day BETWEEN ? AND ?
-		  AND DAY(time_day) % 5 = 0
 		ORDER BY time_day
 	`
+	//TODO:取 5 的倍数
 
 	// 执行查询
 	rows, err := database.Query(queryStr, start, end)
@@ -143,15 +190,21 @@ func MonthTemperatureCheck(c *gin.Context, json TemperatureCheckData) {
 		}
 
 		temps = append(temps, temp)
+		log.Println(temp)
 	}
 
 	if err := rows.Err(); err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
-
-	// 返回 {"mData": [temperatures...]}
+	if len(temps) == 0 {
+		c.JSON(http.StatusInternalServerError, gin.H{
+			"yData": temps,
+		})
+		return
+	}
+	/*	log.Println(temps)*/
 	c.JSON(http.StatusOK, gin.H{
-		"mData": temps,
+		"yData": temps,
 	})
 }
