@@ -23,6 +23,7 @@ type TemperatureCheckData struct {
 	Type     string
 	Location string
 	Start    Time `json:"start"`
+	End      Time `json:"end"`
 }
 type Time struct {
 	time.Time
@@ -64,6 +65,9 @@ func TemperatureCheck(c *gin.Context) {
 		MonthTemperatureCheck(c, temperatureCheckData)
 	case "day":
 		DayTemperatureCheck(c, temperatureCheckData)
+	case "manyyear":
+		InterannualTemperatureCheck(c, temperatureCheckData)
+
 	}
 }
 
@@ -163,7 +167,6 @@ func MonthTemperatureCheck(c *gin.Context, json TemperatureCheckData) {
 		WHERE time_day BETWEEN ? AND ? AND DAY(time_day) MOD 5 = 0
 		ORDER BY time_day
 	`
-	//TODO:取 5 的倍数
 
 	// 执行查询
 	rows, err := database.Query(queryStr, start, end)
@@ -206,5 +209,50 @@ func MonthTemperatureCheck(c *gin.Context, json TemperatureCheckData) {
 	/*	log.Println(temps)*/
 	c.JSON(http.StatusOK, gin.H{
 		"yData": temps,
+	})
+}
+func InterannualTemperatureCheck(c *gin.Context, json TemperatureCheckData) {
+	start := json.Start.Time
+	end := json.End.Time
+	start = start.AddDate(1, 0, 0)
+	end = end.AddDate(1, 0, 0)
+	log.Println(start)
+	log.Println(end)
+	// 构建 SQL 查询语句
+	queryStr := `
+		SELECT temperature
+		FROM YearAverageTemperature
+		WHERE time_year BETWEEN ? AND ?
+		ORDER BY time_year;
+	`
+
+	// 执行查询
+	rows, err := database.Query(queryStr, start, end)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+	defer rows.Close()
+	startYear := start.Year()
+	endYear := end.Year()
+	years := endYear - startYear + 1
+	temp := make([]float64, years)
+	i := 0
+	for rows.Next() {
+		var yeartem float64
+		if err := rows.Scan(&yeartem); err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+			log.Println(err)
+			return
+		}
+		temp[i] = yeartem
+		i++
+	}
+	/*log.Println(endYear)
+	log.Println(startYear)
+	log.Println("test")
+	log.Println(temp)*/
+	c.JSON(http.StatusOK, gin.H{
+		"yData": temp,
 	})
 }
