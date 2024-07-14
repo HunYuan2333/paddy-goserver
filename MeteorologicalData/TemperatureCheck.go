@@ -41,29 +41,29 @@ func (t *Time) UnmarshalJSON(data []byte) error {
 	return nil
 }
 func TemperatureCheck(c *gin.Context) {
-	var json TemperatureCheckData
-	if err := c.ShouldBindJSON(&json); err != nil {
+	var temperatureCheckData TemperatureCheckData
+	if err := c.ShouldBindJSON(&temperatureCheckData); err != nil {
 		// 如果解析失败，返回状态码400（Bad Request）和错误信息
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
-	if json.Start.Time.After(time.Now()) {
+	if temperatureCheckData.Start.Time.After(time.Now()) {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "start time must be before current time"})
 		return
 	}
 	minimumAllowedTime := time.Date(1981, time.January, 1, 1, 0, 0, 0, time.UTC)
-	if json.Start.Time.Before(minimumAllowedTime) {
+	if temperatureCheckData.Start.Time.Before(minimumAllowedTime) {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "start time must be on or after 1981-01-01 01:00:00"})
 		return
 	}
 
-	switch json.Type {
+	switch temperatureCheckData.Type {
 	case "year":
-		YearTemperatureCheck(c, json)
+		YearTemperatureCheck(c, temperatureCheckData)
 	case "month":
-		MonthTemperatureCheck(c, json)
+		MonthTemperatureCheck(c, temperatureCheckData)
 	case "day":
-		DayTemperatureCheck(c, json)
+		DayTemperatureCheck(c, temperatureCheckData)
 	}
 }
 
@@ -160,7 +160,7 @@ func MonthTemperatureCheck(c *gin.Context, json TemperatureCheckData) {
 	queryStr := `
 		SELECT DATE_FORMAT(time_day, '%Y-%m-%d') AS time_day_str, temperature
 		FROM Paddy.DayAverageTemperature
-		WHERE time_day BETWEEN ? AND ?
+		WHERE time_day BETWEEN ? AND ? AND DAY(time_day) MOD 5 = 0
 		ORDER BY time_day
 	`
 	//TODO:取 5 的倍数
