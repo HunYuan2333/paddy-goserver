@@ -84,7 +84,6 @@ func DayTemperatureCheck(c *gin.Context, json TemperatureCheckData) {
 		GROUP BY hour
 		ORDER BY hour;
 	`
-	// 假设有一个全局的database对象用于执行SQL查询
 	rows, err := database.Query(queryStr, start, end)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
