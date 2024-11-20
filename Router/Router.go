@@ -7,7 +7,6 @@ import (
 	"paddy-goserver/DieaseImage"
 	"paddy-goserver/GrowImage"
 	"paddy-goserver/MeteorologicalData"
-	_ "paddy-goserver/MeteorologicalData"
 	"paddy-goserver/PredictImage"
 	"paddy-goserver/ShowImg"
 	"paddy-goserver/UserOperation"
@@ -22,15 +21,21 @@ func init() {
 
 func InitRouter() *gin.Engine {
 	r := gin.Default()
+
+	// 配置 CORS
 	corsConfig := cors.New(cors.Config{
-		AllowOrigins:     []string{"*"}, // 允许任何域名访问，生产环境应替换为具体的域名
-		AllowMethods:     []string{"GET", "POST"},
-		AllowHeaders:     []string{"Content-Type"},
+		AllowOrigins:     []string{"http://localhost:8080"},                                                                                                   // 允许的源
+		AllowMethods:     []string{"GET", "POST", "OPTIONS"},                                                                                                  // 包括 OPTIONS 方法
+		AllowHeaders:     []string{"Content-Type", "Authorization", "Accept", "Referer", "User-Agent", "Sec-Ch-Ua", "Sec-Ch-Ua-Mobile", "Sec-Ch-Ua-Platform"}, // 允许的头部
 		ExposeHeaders:    []string{},
 		AllowCredentials: true,
 		MaxAge:           12 * time.Hour,
 	})
+
+	// 应用 CORS 中间件
 	r.Use(corsConfig)
+
+	// 定义路由
 	r.POST("/UploadUserImage", UserOperation.UserImageUpload)
 	r.POST("/userlogin", UserOperation.Userlogin)
 	r.POST("/usersignup", UserOperation.UserSignup)
@@ -39,5 +44,6 @@ func InitRouter() *gin.Engine {
 	r.POST("/DiseaseImage", DieaseImage.DiseaseImageUpload)
 	r.POST("/PredictImage", PredictImage.PredictImage)
 	r.POST("/GetData/:Type", MeteorologicalData.DataCheck)
+
 	return r
 }

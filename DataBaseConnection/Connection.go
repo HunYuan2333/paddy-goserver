@@ -3,12 +3,17 @@ package DataBaseConnection
 import (
 	"fmt"
 	"github.com/jmoiron/sqlx"
+	"paddy-goserver/ConfigInit"
 )
 
 var DB *sqlx.DB
+var config *ConfigInit.Config
 
+func init() {
+	config, _ = ConfigInit.ReadConfigFile()
+}
 func SetupDatabase() error {
-	db, err := sqlx.Open("mysql", "root:13376035511@tcp(127.0.0.1:3306)/Paddy")
+	db, err := sqlx.Open(config.DriverName, config.DriverCommand)
 	if err != nil {
 		fmt.Println("open mysql failed,", err)
 		return err

@@ -1,0 +1,3 @@
+token-key: 35c2461f8bc77529f80a448c76823f416eb393a3289c511b0d705ddc316dc49a
+sql-driver-name: mysql
+sql-driver-command: root:13376035511@tcp(127.0.0.1:3306)/Paddy
