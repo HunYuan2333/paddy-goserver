@@ -5,6 +5,7 @@ import (
 	"net/http"
 )
 
+//goland:noinspection GoUnusedExportedFunction
 func Cors() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		method := c.Request.Method

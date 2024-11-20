@@ -28,6 +28,7 @@ func UserSignup(c *gin.Context) {
 
 	if err := c.ShouldBindJSON(&json); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		log.Print(err)
 		return
 	}
 	prepStmtCheck := "SELECT COUNT(*) FROM User WHERE Username = ?"
@@ -35,7 +36,7 @@ func UserSignup(c *gin.Context) {
 	var count int
 	if err := row.Scan(&count); err != nil && !errors.Is(err, sql.ErrNoRows) {
 		log.Printf("Error checking for duplicate username: %v", err)
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to process request"})
+		c.JSON(http.StatusInternalServerError, err)
 		return
 	}
 	if count > 0 {
@@ -46,7 +47,7 @@ func UserSignup(c *gin.Context) {
 	HashedPassword, hasherr := HashPassword(json.Password)
 	if hasherr != nil {
 		log.Printf("Error hashing password: %v", hasherr)
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to process request"})
+		c.JSON(http.StatusInternalServerError, hasherr)
 		return
 	}
 	prepstmt := "INSERT INTO User(Username,Password,imgurl) VALUES (?,?,?)"
@@ -54,12 +55,12 @@ func UserSignup(c *gin.Context) {
 	if errpre != nil {
 		fmt.Print("error in datacommand prepare")
 		log.Print(errpre)
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to register customer"})
+		c.JSON(http.StatusInternalServerError, errpre)
 		return
 	}
 	_, err := stmt.Exec(json.Username, HashedPassword, "no.png")
 	if err != nil { // 处理错误...
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to register customer"})
+		c.JSON(http.StatusInternalServerError, err)
 		return
 	}
 	c.JSON(200, gin.H{

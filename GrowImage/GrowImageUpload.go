@@ -7,7 +7,7 @@ import (
 	"path/filepath"
 )
 
-func GrowImageUpload(c *gin.Context) {
+func Upload(c *gin.Context) {
 	file, err := c.FormFile("file")
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Error retrieving file from request"})

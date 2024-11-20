@@ -1,9 +1,11 @@
 package UserOperation
 
 import (
+	"database/sql"
 	"github.com/gin-gonic/gin"
 	"io"
 	"log"
+	"mime/multipart"
 	"net/http"
 	"os"
 )
@@ -37,13 +39,21 @@ func UserImageUpload(c *gin.Context) {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
-	defer dst.Close()
+	defer func(dst *os.File) {
+		err := dst.Close()
+		if err != nil {
+		}
+	}(dst)
 	src, err := file.Open()
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to open uploaded file"})
 		return
 	}
-	defer src.Close()
+	defer func(src multipart.File) {
+		err := src.Close()
+		if err != nil {
+		}
+	}(src)
 
 	if _, err := io.Copy(dst, src); err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to copy file contents"})
@@ -53,7 +63,11 @@ func UserImageUpload(c *gin.Context) {
 	if err != nil {
 		log.Fatal(err)
 	}
-	defer stmt.Close()
+	defer func(stmt *sql.Stmt) {
+		err := stmt.Close()
+		if err != nil {
+		}
+	}(stmt)
 	databaseimgurl := userid + ".jpg"
 	_, err = stmt.Exec(databaseimgurl, userid)
 	if err != nil {

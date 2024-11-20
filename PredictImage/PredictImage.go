@@ -2,18 +2,19 @@ package PredictImage
 
 import (
 	"github.com/gin-gonic/gin"
+	"io"
 	"io/ioutil"
 	"log"
 	"net/http"
 )
 
-type PredictImageData struct {
+type Data struct {
 	ImageId string `json:"imageid"`
 	ModelId string `json:"modelid"`
 }
 
 func PredictImage(c *gin.Context) {
-	var json PredictImageData
+	var json Data
 	if err := c.ShouldBindJSON(&json); err != nil {
 		c.JSON(400, gin.H{"error": err.Error()})
 		log.Print(err)
@@ -26,7 +27,9 @@ func PredictImage(c *gin.Context) {
 		log.Printf("Error sending request to Python API: %v", err)
 		return
 	}
-	defer res.Body.Close()
+	defer func(Body io.ReadCloser) {
+		_ = Body.Close()
+	}(res.Body)
 	body, err := ioutil.ReadAll(res.Body)
 	if err != nil {
 		// 读取响应体时出错

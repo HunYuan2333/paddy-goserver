@@ -29,7 +29,11 @@ func ShowPredictGrowImage(c *gin.Context) {
 	myfilepath := filedir + "/" + Imgid + ".jpg"
 	body, err := ioutil.ReadAll(res.Body)
 	f, err := os.Create(myfilepath)
-	defer f.Close()
+	defer func(f *os.File) {
+		err := f.Close()
+		if err != nil {
+		}
+	}(f)
 	_, err = f.Write(body)
 	result := gin.H{
 		"status": res.StatusCode,

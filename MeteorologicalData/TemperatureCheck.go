@@ -1,6 +1,7 @@
 package MeteorologicalData
 
 import (
+	"database/sql"
 	"encoding/json"
 	"github.com/gin-gonic/gin"
 	"github.com/jmoiron/sqlx"
@@ -90,19 +91,23 @@ func DayTemperatureCheck(c *gin.Context, json TemperatureCheckData) {
 		log.Println("Error executing query:", err)
 		return
 	}
-	defer rows.Close()
+	defer func(rows *sql.Rows) {
+		err := rows.Close()
+		if err != nil {
+		}
+	}(rows)
 
 	// 初始化24小时的温度数组
 	temp := make([]float64, 24)
 
 	for rows.Next() {
 		var hour int
-		var avg_hourlytem float64
-		if err := rows.Scan(&hour, &avg_hourlytem); err != nil {
+		var avgHourlytem float64
+		if err := rows.Scan(&hour, &avgHourlytem); err != nil {
 			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 			return
 		}
-		temp[hour] = avg_hourlytem
+		temp[hour] = avgHourlytem
 		if err := rows.Err(); err != nil {
 			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 			return
@@ -133,18 +138,22 @@ func YearTemperatureCheck(c *gin.Context, json TemperatureCheckData) {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
-	defer rows.Close()
+	defer func(rows *sql.Rows) {
+		err := rows.Close()
+		if err != nil {
+		}
+	}(rows)
 
 	temp := make([]float64, 12)
 	for rows.Next() {
 		var month string
-		var avg_monthtem float64
-		if err := rows.Scan(&month, &avg_monthtem); err != nil {
+		var avgMonthtem float64
+		if err := rows.Scan(&month, &avgMonthtem); err != nil {
 			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 			return
 		}
 		mon, _ := time.Parse("2006-01", month)
-		temp[mon.Month()-1] = avg_monthtem
+		temp[mon.Month()-1] = avgMonthtem
 		if err := rows.Err(); err != nil {
 			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 			return
@@ -173,9 +182,13 @@ func MonthTemperatureCheck(c *gin.Context, json TemperatureCheckData) {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
-	defer rows.Close()
+	defer func(rows *sql.Rows) {
+		err := rows.Close()
+		if err != nil {
+		}
+	}(rows)
 
-	temps := []float64{}
+	var temps []float64
 	for rows.Next() {
 		var timeStr string
 		var temp float64
@@ -231,7 +244,11 @@ func InterannualTemperatureCheck(c *gin.Context, json TemperatureCheckData) {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
-	defer rows.Close()
+	defer func(rows *sql.Rows) {
+		err := rows.Close()
+		if err != nil {
+		}
+	}(rows)
 	startYear := start.Year()
 	endYear := end.Year()
 	years := endYear - startYear + 1

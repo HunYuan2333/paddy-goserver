@@ -26,6 +26,6 @@ func ShowDiseaseImage(c *gin.Context) {
 		})
 		return
 	}
-	content_type := "image/jpg"
-	c.Data(http.StatusOK, content_type, body)
+	contentType := "image/jpg"
+	c.Data(http.StatusOK, contentType, body)
 }
