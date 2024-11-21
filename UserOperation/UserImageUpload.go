@@ -8,6 +8,7 @@ import (
 	"mime/multipart"
 	"net/http"
 	"os"
+	"paddy-goserver/ConfigInit"
 )
 
 func UserImageUpload(c *gin.Context) {
@@ -24,7 +25,11 @@ func UserImageUpload(c *gin.Context) {
 	}
 	file := files[0]
 	userid := form.Value["userid"][0]
-	filedir := os.Getenv("PADDY_SERVER_FILE_PATH")
+	config, err := ConfigInit.ReadConfigFile()
+	if err != nil {
+		log.Print(err)
+	}
+	filedir := config.FilePath
 	log.Print(filedir)
 	filedir = filedir + "/" + "UserImage"
 	err = os.MkdirAll(filedir, 0755)

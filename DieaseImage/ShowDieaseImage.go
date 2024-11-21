@@ -6,12 +6,17 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"paddy-goserver/ConfigInit"
 	"path/filepath"
 )
 
 func ShowDiseaseImage(c *gin.Context) {
 	imgid := c.Param("imageId") + ".jpg"
-	Imgdir := os.Getenv("PADDY_SERVER_FILE_PATH")
+	config, err := ConfigInit.ReadConfigFile()
+	if err != nil {
+		log.Print(err)
+	}
+	Imgdir := config.FilePath
 	ImgPath := filepath.Join(Imgdir, "/DiseaseImage")
 	if err := os.MkdirAll(ImgPath, 0755); err != nil {
 		// 处理错误

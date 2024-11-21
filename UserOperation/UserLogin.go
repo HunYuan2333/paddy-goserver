@@ -12,6 +12,7 @@ import (
 	"net/http"
 	"paddy-goserver/ConfigInit"
 	"paddy-goserver/DataBaseConnection"
+	"strconv"
 	"time"
 )
 
@@ -42,12 +43,12 @@ func setTokenCookie(c *gin.Context, token string) {
 	}
 	http.SetCookie(c.Writer, cookie)
 }
-func generateToken(userId int64, username string) (string, error) {
+func generateToken(userId int64) (string, error) {
 	// 创建一个我们自己的声明数据结构
 	expiresAt := jwt.NewNumericDate(time.Now().Add(time.Hour * 72))
 	claims := &jwt.RegisteredClaims{
 		Issuer:    "Login",
-		Subject:   username,
+		Subject:   strconv.FormatInt(userId, 10),
 		ExpiresAt: expiresAt, // 令牌有效期为72小时
 	}
 
@@ -100,7 +101,7 @@ func Userlogin(c *gin.Context) {
 		hasherr := bcrypt.CompareHashAndPassword(hashedPassword, []byte(json.Password))
 		// 根据查询结果计数判断登录是否成功，并返回相应的状态码和信息
 		if hasherr == nil {
-			var token, _ = generateToken(Userid, json.Username)
+			var token, _ = generateToken(Userid)
 			setTokenCookie(c, token)
 			c.JSON(http.StatusOK, gin.H{"code": "200",
 				"id":       Userid,

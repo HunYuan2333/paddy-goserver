@@ -2,8 +2,10 @@ package DieaseImage
 
 import (
 	"github.com/gin-gonic/gin"
+	"log"
 	"net/http"
 	"os"
+	"paddy-goserver/ConfigInit"
 	"path/filepath"
 )
 
@@ -13,7 +15,11 @@ func DiseaseImageUpload(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Error retrieving file from request"})
 		return
 	}
-	filedir := os.Getenv("PADDY_SERVER_FILE_PATH")
+	config, err := ConfigInit.ReadConfigFile()
+	if err != nil {
+		log.Print(err)
+	}
+	filedir := config.FilePath
 	filedir = filepath.Join(filedir, "/DiseaseImage")
 	err = os.MkdirAll(filedir, 0755)
 	if err != nil {

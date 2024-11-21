@@ -3,14 +3,19 @@ package UserOperation
 import (
 	"github.com/gin-gonic/gin"
 	"io/ioutil"
+	"log"
 	"net/http"
-	"os"
+	"paddy-goserver/ConfigInit"
 	"path/filepath"
 )
 
 func UserImage(c *gin.Context) {
 	Imgurl := c.Param("imageId")
-	filename := os.Getenv("PADDY_SERVER_FILE_PATH") + "/" + "UserImage" + "/" + Imgurl
+	config, err := ConfigInit.ReadConfigFile()
+	if err != nil {
+		log.Print(err)
+	}
+	filename := config.FilePath + "/" + "UserImage" + "/" + Imgurl
 	imgData, err := ioutil.ReadFile(filename)
 	if err != nil {
 		c.AbortWithStatus(http.StatusNotFound)

@@ -6,6 +6,7 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"paddy-goserver/ConfigInit"
 )
 
 func ShowPredictDiseaseImage(c *gin.Context) {
@@ -20,7 +21,11 @@ func ShowPredictDiseaseImage(c *gin.Context) {
 		log.Print(err)
 		return
 	}
-	filedir := os.Getenv("PADDY_SERVER_FILE_PATH")
+	config, err := ConfigInit.ReadConfigFile()
+	if err != nil {
+		log.Print(err)
+	}
+	filedir := config.FilePath
 	filedir = filedir + "/" + "PredictDiseaseImage"
 	err = os.MkdirAll(filedir, 0755)
 	if err != nil {

@@ -11,6 +11,7 @@ type Config struct {
 	TokenKey      string `yaml:"token-key"`
 	DriverName    string `yaml:"sql-driver-name"`
 	DriverCommand string `yaml:"sql-driver-command"`
+	FilePath      string `yaml:"paddy-server-file-path"`
 }
 
 // ReadConfigFile 读取根目录下的 config.yaml 文件并解析配置
