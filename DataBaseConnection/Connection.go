@@ -2,8 +2,9 @@ package DataBaseConnection
 
 import (
 	"fmt"
-	"github.com/jmoiron/sqlx"
 	"paddy-goserver/ConfigInit"
+
+	"github.com/jmoiron/sqlx"
 )
 
 var DB *sqlx.DB

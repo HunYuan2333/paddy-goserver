@@ -1,11 +1,13 @@
 package PredictImage
 
 import (
-	"github.com/gin-gonic/gin"
+	"bytes" // Import the bytes package
 	"io"
 	"io/ioutil"
 	"log"
 	"net/http"
+
+	"github.com/gin-gonic/gin"
 )
 
 type Data struct {
@@ -14,14 +16,27 @@ type Data struct {
 }
 
 func PredictImage(c *gin.Context) {
+	// Print the raw request body before binding
+	bodyBytes, err := ioutil.ReadAll(c.Request.Body)
+	if err != nil {
+		log.Printf("Error reading raw request body: %v", err)
+		// Continue processing even if reading raw body fails, as ShouldBindJSON might still work
+	} else {
+		log.Printf("Raw Request Body: %s", string(bodyBytes))
+		// Restore the body so ShouldBindJSON can read it
+		c.Request.Body = ioutil.NopCloser(bytes.NewBuffer(bodyBytes))
+	}
+
 	var json Data
 	if err := c.ShouldBindJSON(&json); err != nil {
 		c.JSON(400, gin.H{"error": err.Error()})
 		log.Print(err)
 		return
 	}
-	pythonurl := "127.0.0.1/predict_image"
-	res, err := http.Post(pythonurl, "application/json", c.Request.Body)
+
+	pythonurl := "http://127.0.0.1:5050/predict_image"
+	// Use the read bodyBytes in the new request
+	res, err := http.Post(pythonurl, "application/json", bytes.NewBuffer(bodyBytes))
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Error communicating with Python API"})
 		log.Printf("Error sending request to Python API: %v", err)
@@ -30,12 +45,13 @@ func PredictImage(c *gin.Context) {
 	defer func(Body io.ReadCloser) {
 		_ = Body.Close()
 	}(res.Body)
-	body, err := ioutil.ReadAll(res.Body)
-	if err != nil {
+	responseBodyBytes, responseErr := ioutil.ReadAll(res.Body) // Changed variable names
+	if responseErr != nil {                                    // Changed variable name
 		// 读取响应体时出错
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to read response from Python API"})
-		log.Printf("Error reading response from Python API: %v", err)
+		log.Printf("Error reading response from Python API: %v", responseErr) // Changed variable name
 		return
 	}
-	c.JSON(http.StatusOK, body)
+	log.Printf("Response from Python API: %s", string(responseBodyBytes))
+	c.JSON(http.StatusOK, responseBodyBytes) // Changed variable name
 }

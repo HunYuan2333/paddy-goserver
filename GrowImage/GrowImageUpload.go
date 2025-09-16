@@ -1,12 +1,13 @@
 package GrowImage
 
 import (
-	"github.com/gin-gonic/gin"
 	"log"
 	"net/http"
 	"os"
 	"paddy-goserver/ConfigInit"
 	"path/filepath"
+
+	"github.com/gin-gonic/gin"
 )
 
 func Upload(c *gin.Context) {
@@ -20,7 +21,7 @@ func Upload(c *gin.Context) {
 		log.Print(err)
 	}
 	filedir := config.FilePath
-	filedir = filepath.Join(filedir, "/GrowImage")
+	filedir = filepath.Join(filedir, "/grow")
 	err = os.MkdirAll(filedir, 0755)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Error creating directory"})

@@ -1,12 +1,13 @@
 package DieaseImage
 
 import (
-	"github.com/gin-gonic/gin"
 	"log"
 	"net/http"
 	"os"
 	"paddy-goserver/ConfigInit"
 	"path/filepath"
+
+	"github.com/gin-gonic/gin"
 )
 
 func DiseaseImageUpload(c *gin.Context) {
@@ -18,15 +19,16 @@ func DiseaseImageUpload(c *gin.Context) {
 	config, err := ConfigInit.ReadConfigFile()
 	if err != nil {
 		log.Print(err)
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Error reading config file"})
+		return
 	}
-	filedir := config.FilePath
-	filedir = filepath.Join(filedir, "/DiseaseImage")
+	filedir := filepath.Join(config.FilePath, "disease")
 	err = os.MkdirAll(filedir, 0755)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Error creating directory"})
 		return
 	}
-	myfilepath := filepath.Join(filedir, "/", file.Filename)
+	myfilepath := filepath.Join(filedir, file.Filename)
 	err = c.SaveUploadedFile(file, myfilepath)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Error saving file"})

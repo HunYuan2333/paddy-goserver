@@ -1,11 +1,12 @@
 package main
 
 import (
-	"github.com/gin-gonic/gin"
-	_ "github.com/go-sql-driver/mysql"
 	"log"
 	"net/http"
 	"paddy-goserver/Router"
+
+	"github.com/gin-gonic/gin"
+	_ "github.com/go-sql-driver/mysql"
 )
 
 func main() {
@@ -23,7 +24,7 @@ func main() {
 	})
 
 	// 启动服务器
-	err = r.Run(":5000")
+	err = r.Run(":8082") // 修改端口为8082，避免与Python服务器(5000)冲突
 	if err != nil {
 		log.Print(err)
 		return

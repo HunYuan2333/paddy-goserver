@@ -3,17 +3,16 @@ package UserOperation
 import (
 	"database/sql"
 	"errors"
-	"github.com/gin-gonic/gin"
-	_ "github.com/go-sql-driver/mysql"
-	"github.com/golang-jwt/jwt/v4"
-	"github.com/jmoiron/sqlx"
-	"golang.org/x/crypto/bcrypt"
 	"log"
 	"net/http"
-	"paddy-goserver/ConfigInit"
+
 	"paddy-goserver/DataBaseConnection"
-	"strconv"
-	"time"
+	"paddy-goserver/auth"
+
+	"github.com/gin-gonic/gin"
+	_ "github.com/go-sql-driver/mysql"
+	"github.com/jmoiron/sqlx"
+	"golang.org/x/crypto/bcrypt"
 )
 
 // Login 结构体用于定义用户登录信息
@@ -22,47 +21,13 @@ type Login struct {
 	Password string `json:"password"` // 密码
 }
 
-var config, _ = ConfigInit.ReadConfigFile()
 var database *sqlx.DB
-var jwtKey = []byte(config.TokenKey)
 
 func init() {
 	if err := DataBaseConnection.SetupDatabase(); err != nil {
 		panic(err)
 	}
 	database = DataBaseConnection.GetDatabase()
-}
-func setTokenCookie(c *gin.Context, token string) {
-	cookie := &http.Cookie{
-		Name:     "token",
-		Value:    token,
-		Path:     "/",
-		HttpOnly: true,
-		Secure:   true, // 如果使用 HTTPS，设置为 true
-		SameSite: http.SameSiteLaxMode,
-	}
-	http.SetCookie(c.Writer, cookie)
-}
-func generateToken(userId int64) (string, error) {
-	// 创建一个我们自己的声明数据结构
-	expiresAt := jwt.NewNumericDate(time.Now().Add(time.Hour * 72))
-	claims := &jwt.RegisteredClaims{
-		Issuer:    "Login",
-		Subject:   strconv.FormatInt(userId, 10),
-		ExpiresAt: expiresAt, // 令牌有效期为72小时
-	}
-
-	// 使用指定的签名方法创建签名对象
-	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
-
-	// 使用指定的密钥签名并获得完整的编码后的字符串
-	signedToken, err := token.SignedString(jwtKey)
-	if err != nil {
-		log.Fatalf("Failed to sign token: %v", err)
-		return "", err
-	}
-
-	return signedToken, nil
 }
 
 func Userlogin(c *gin.Context) {
@@ -101,9 +66,19 @@ func Userlogin(c *gin.Context) {
 		hasherr := bcrypt.CompareHashAndPassword(hashedPassword, []byte(json.Password))
 		// 根据查询结果计数判断登录是否成功，并返回相应的状态码和信息
 		if hasherr == nil {
-			var token, _ = generateToken(Userid)
-			setTokenCookie(c, token)
-			c.JSON(http.StatusOK, gin.H{"code": "200",
+			// 使用新的auth包生成token
+			token, err := auth.GenerateToken(Userid)
+			if err != nil {
+				log.Printf("Failed to generate token: %v", err)
+				c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to generate token"})
+				return
+			}
+
+			// 设置cookie
+			auth.SetTokenCookie(c, token)
+
+			c.JSON(http.StatusOK, gin.H{
+				"code":     "200",
 				"id":       Userid,
 				"imgurl":   imgurl,
 				"username": json.Username,
@@ -113,4 +88,15 @@ func Userlogin(c *gin.Context) {
 			c.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid credentials"})
 		}
 	}
+}
+
+// UserLogout 用户退出登录
+func UserLogout(c *gin.Context) {
+	// 清除cookie中的token
+	auth.ClearTokenCookie(c)
+
+	c.JSON(http.StatusOK, gin.H{
+		"code":    "200",
+		"message": "退出登录成功",
+	})
 }
