@@ -27,7 +27,7 @@ func InitRouter() *gin.Engine {
 
 	// 配置 CORS
 	corsConfig := cors.New(cors.Config{
-		AllowOrigins:     []string{"http://localhost:8080", "http://localhost:8081", "http://localhost:3000"},                              // 允许前端开发服务器的源
+		AllowOrigins:     []string{"http://localhost:8080"},                                                                                // 允许所有源
 		AllowMethods:     []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"},                                                              // 包括更多HTTP方法
 		AllowHeaders:     []string{"Content-Type", "Authorization", "Accept", "Origin", "User-Agent", "Cache-Control", "X-Requested-With"}, // 允许的头部
 		ExposeHeaders:    []string{"Content-Length"},

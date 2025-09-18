@@ -94,6 +94,22 @@ func GetTokenFromCookie(c *gin.Context) (string, error) {
 	return token, nil
 }
 
+// GetTokenFromHeader 从 Authorization Header 中获取 token
+func GetTokenFromHeader(c *gin.Context) (string, error) {
+	authHeader := c.GetHeader("Authorization")
+	if authHeader == "" {
+		return "", errors.New("authorization header is missing")
+	}
+
+	// Token 通常以 "Bearer " 开头
+	const bearerPrefix = "Bearer "
+	if len(authHeader) > len(bearerPrefix) && authHeader[:len(bearerPrefix)] == bearerPrefix {
+		return authHeader[len(bearerPrefix):], nil
+	}
+
+	return "", errors.New("invalid authorization header format")
+}
+
 // ClearTokenCookie 清除token cookie（用于退出登录）
 func ClearTokenCookie(c *gin.Context) {
 	c.SetCookie(

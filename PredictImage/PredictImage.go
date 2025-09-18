@@ -1,7 +1,8 @@
 package PredictImage
 
 import (
-	"bytes" // Import the bytes package
+	"bytes"
+	"encoding/json"
 	"io"
 	"io/ioutil"
 	"log"
@@ -27,8 +28,8 @@ func PredictImage(c *gin.Context) {
 		c.Request.Body = ioutil.NopCloser(bytes.NewBuffer(bodyBytes))
 	}
 
-	var json Data
-	if err := c.ShouldBindJSON(&json); err != nil {
+	var jsondata Data
+	if err := c.ShouldBindJSON(&jsondata); err != nil {
 		c.JSON(400, gin.H{"error": err.Error()})
 		log.Print(err)
 		return
@@ -53,5 +54,14 @@ func PredictImage(c *gin.Context) {
 		return
 	}
 	log.Printf("Response from Python API: %s", string(responseBodyBytes))
-	c.JSON(http.StatusOK, responseBodyBytes) // Changed variable name
+
+	// Unmarshal the byte slice into a map
+	var result map[string]interface{}
+	if err := json.Unmarshal(responseBodyBytes, &result); err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to parse response from Python API"})
+		log.Printf("Error unmarshalling response from Python API: %v", err)
+		return
+	}
+
+	c.JSON(http.StatusOK, result) // Send the parsed map as JSON
 }
